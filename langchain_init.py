@@ -161,9 +161,15 @@ async def response_from_llm_astream(question):
     return [s async for s in chain.astream({"text": question})]
 
 
-# rag 一般返回，非流式
-def response_from_llm_rag(question):
 
+# 全局变量
+retriever = None
+
+"""
+全局 retriever 初始化
+"""
+def rag_prepare():
+    global retriever
     loader = TextLoader("./know/README.md", encoding="utf-8")
     docs = loader.load()
 
@@ -185,6 +191,37 @@ def response_from_llm_rag(question):
     vector_store = Chroma.from_documents(docs_split, embeddings)
     # 初始化检索器
     retriever = vector_store.as_retriever()
+    print(retriever is None)
+    print('rag_prepare ok')
+
+
+
+
+
+# rag 一般返回，非流式
+def response_from_llm_rag(question):
+
+    # loader = TextLoader("./know/README.md", encoding="utf-8")
+    # docs = loader.load()
+    #
+    # text_splitter = CharacterTextSplitter(
+    #     chunk_size=1000,
+    #     chunk_overlap=0
+    # )
+    # docs_split = text_splitter.split_documents(docs)
+    #
+    # print(len(docs_split))
+    # print(docs_split)
+    #
+    # embeddings = OpenAIEmbeddings(
+    #     openai_api_base=OPENAI_API_BASE,
+    #     openai_api_key=api_key
+    # )
+    #
+    # # 存入向量存储
+    # vector_store = Chroma.from_documents(docs_split, embeddings)
+    # # 初始化检索器
+    # retriever = vector_store.as_retriever()
 
     system_template = """
     Use the following pieces of context to answer the users question.
@@ -225,27 +262,27 @@ def response_from_llm_rag(question):
 # rag 流式返回，响应过慢，不如非流式
 def response_from_llm_rag_stream(question):
 
-    loader = TextLoader("./know/README.md", encoding="utf-8")
-    docs = loader.load()
-
-    text_splitter = CharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=0
-    )
-    docs_split = text_splitter.split_documents(docs)
-
-    print(len(docs_split))
-    print(docs_split)
-
-    embeddings = OpenAIEmbeddings(
-        openai_api_base=OPENAI_API_BASE,
-        openai_api_key=api_key
-    )
-
-    # 存入向量存储
-    vector_store = Chroma.from_documents(docs_split, embeddings)
-    # 初始化检索器
-    retriever = vector_store.as_retriever()
+    # loader = TextLoader("./know/README.md", encoding="utf-8")
+    # docs = loader.load()
+    #
+    # text_splitter = CharacterTextSplitter(
+    #     chunk_size=1000,
+    #     chunk_overlap=0
+    # )
+    # docs_split = text_splitter.split_documents(docs)
+    #
+    # print(len(docs_split))
+    # print(docs_split)
+    #
+    # embeddings = OpenAIEmbeddings(
+    #     openai_api_base=OPENAI_API_BASE,
+    #     openai_api_key=api_key
+    # )
+    #
+    # # 存入向量存储
+    # vector_store = Chroma.from_documents(docs_split, embeddings)
+    # # 初始化检索器
+    # retriever = vector_store.as_retriever()
 
     system_template = """
     Use the following pieces of context to answer the users question.
@@ -268,13 +305,13 @@ def response_from_llm_rag_stream(question):
     # 创建回调对象
     handler = stream_handler.ChainStreamHandler()
 
-    # streaming = True, callback_manager = CallbackManager([handler])
     llm = ChatOpenAI(
         model_name="gpt-3.5-turbo",
         openai_api_base=OPENAI_API_BASE,
         openai_api_key=api_key,
         streaming=True,
-        callback_manager=CallbackManager([handler]),
+        # callbacks=[handler]
+        callback_manager=CallbackManager([handler])
     )
 
     # 初始化问答链

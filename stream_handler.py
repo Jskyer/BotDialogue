@@ -8,7 +8,7 @@ from langchain_core.outputs import LLMResult
 class ChainStreamHandler(StreamingStdOutCallbackHandler):
     def __init__(self):
         self.tokens = []
-        # 记得结束后这里置true
+        # 记得结束后置true
         self.finish = False
 
     def on_llm_new_token(self, token: str, **kwargs):
